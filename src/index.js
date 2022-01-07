@@ -9,13 +9,12 @@ const mongoose = require('mongoose');
 const {v4: uuidv4} = require('uuid');
 
 const { Ad } = require('../models/ad');
-const { Cart } = require('../models/cart');
 const { User } = require('../models/user');
-const { Todo} = require('../models/todo')
-mongoose.connect('mongodb+srv://mongo-DevAcademy:sheffield22@cluster0.buz9v.mongodb.net/authorization?retryWrites=true&w=majority');
+mongoose.connect('mongodb+srv://admin:uQfTlXrdt0XkZvH9@cluster0.3ypd2.mongodb.net/adverts?retryWrites=true&w=majority');
 const port = process.env.PORT || 3001
 // defining the Express app
 const app = express();
+const defaultSort = {date: 1}
 
 // adding Helmet to enhance your API's security
 app.use(helmet());
@@ -59,7 +58,7 @@ app.use( async (req,res,next) => {
 
 // defining CRUD operations
 app.get('/', async (req, res) => {
-  res.send(await Ad.find());
+  res.send(await Ad.find().sort(defaultSort).lean());
 });
 
 app.post('/', async (req, res) => {
@@ -79,35 +78,29 @@ app.put('/:id', async (req, res) => {
   res.send({ message: 'Ad updated.' });
 });
 
+app.get('/events/:location', async (req, res) => {
+  const result = await Ad.find({ location: req.params.location} ).lean()
+  res.send(result);
+})
 
-
-
-// defining CRUD operations
-app.get('/todo', async (req, res) => {
-  res.send(await Todo.find());
-});
-
-app.post('/todo', async (req, res) => {
-  const newTodo = req.body;
-  const todo = new Todo(newTodo);
-  await todo.save();
-  res.send({ message: 'New todo inserted.' });
-});
-
-app.delete('/todo/:id', async (req, res) => {
-  await Todo.deleteOne({ _id: ObjectId(req.params.id) })
-  res.send({ message: 'todo removed.' });
-});
-
-app.put('/todo/:id', async (req, res) => {
-  await Todo.findOneAndUpdate({ _id: ObjectId(req.params.id)}, req.body )
-  res.send({ message: 'todo updated.' });
-});
-
-
-
-
-
+app.post('/events/search', async (req, res) => {
+  const { sLocation, sEvent, dateMin, dateMax } = req.body
+  const query = {}
+  if (sEvent) {
+    query.event = sEvent
+  }
+  if (sLocation){
+    query.location = sLocation
+  }
+  if (dateMin){
+    query.date = { $gte: dateMin }
+  }
+if (dateMax) {
+  if (!query.date) { query.date = {} }
+  query.date.$lte = dateMax
+  }
+  res.send(await Ad.find(query).sort(defaultSort).lean())
+})
 
 // starting the server
 app.listen(port, () => {
