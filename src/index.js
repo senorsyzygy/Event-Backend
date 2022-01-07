@@ -98,7 +98,7 @@ app.post('/events/search', async (req, res) => {
   if (dateMax) {
   query.date.$lte = dateMax
   }
-  if (!dateMax){
+  if (!dateMax && dateMin){
     query.date={$lte:dateMin}
   }
   res.send(await Ad.find(query).sort(defaultSort).lean())
