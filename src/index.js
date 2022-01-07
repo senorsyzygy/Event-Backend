@@ -84,13 +84,16 @@ app.get('/events/:location', async (req, res) => {
 })
 
 app.post('/events/search', async (req, res) => {
-  const { sLocation, sEvent, dateMin, dateMax } = req.body
+  const { sLocation, sEvent, dateEq, dateMin, dateMax } = req.body
   const query = {}
   if (sEvent) {
     query.event = sEvent
   }
   if (sLocation){
     query.location = sLocation
+  }
+  if (dateEq){
+    query.date = { $eq: dateEq }
   }
   if (dateMin){
     query.date = { $gte: dateMin }
